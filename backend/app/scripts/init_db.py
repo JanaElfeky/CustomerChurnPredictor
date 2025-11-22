@@ -65,5 +65,5 @@ def init_db_from_csv(csv_path: str):
 
 
 if __name__ == "__main__":
-    csv_path = 'churn_data_cleaned.csv'
+    csv_path = 'churn.csv'
     init_db_from_csv(csv_path)
