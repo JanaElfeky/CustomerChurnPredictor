@@ -44,10 +44,10 @@ def init_db_from_csv(csv_path: str):
                 turnover_dynamic_paym_1m=row["TURNOVER_DYNAMIC_PAYM_1M"],
                 trans_amount_tendency3m=row["TRANS_AMOUNT_TENDENCY3M"],
                 trans_cnt_tendency3m=row["TRANS_CNT_TENDENCY3M"],
-                pack_102=int(row["PACK_102"]),
-                pack_103=int(row["PACK_103"]),
-                pack_104=int(row["PACK_104"]),
-                pack_105=int(row["PACK_105"]),
+                pack_102=bool(row["PACK_102"]),
+                pack_103=bool(row["PACK_103"]),
+                pack_104=bool(row["PACK_104"]),
+                pack_105=bool(row["PACK_105"]),
             )
             db.session.add(customer)
             db.session.flush()  # important to flush to sync PK for FK use
@@ -56,7 +56,7 @@ def init_db_from_csv(csv_path: str):
             if "TARGET" in df.columns and not pd.isnull(row["TARGET"]):
                 label = CustomerLabel(
                     id=customer.id,  # Use the same ID as PK and FK
-                    target=int(row["TARGET"]),
+                    target=bool(row["TARGET"]),
                 )
                 db.session.add(label)
 

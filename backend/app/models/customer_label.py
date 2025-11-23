@@ -10,5 +10,5 @@ class CustomerLabel(db.Model):
         db.ForeignKey("customers.id"),
         primary_key=True,
         nullable=False)
-    target = db.Column(db.Integer, nullable=False)  # 0/1
+    target = db.Column(db.Boolean, nullable=False)  # 0/1
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

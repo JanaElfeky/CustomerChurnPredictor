@@ -35,9 +35,9 @@ class Customer(db.Model):
     trans_amount_tendency3m = db.Column(db.Float)
     trans_cnt_tendency3m = db.Column(db.Float)
 
-    pack_102 = db.Column(db.Integer)
-    pack_103 = db.Column(db.Integer)
-    pack_104 = db.Column(db.Integer)
-    pack_105 = db.Column(db.Integer)
+    pack_102 = db.Column(db.Boolean)
+    pack_103 = db.Column(db.Boolean)
+    pack_104 = db.Column(db.Boolean)
+    pack_105 = db.Column(db.Boolean)
 
     labels = db.relationship("CustomerLabel", backref="customer", lazy=True)
