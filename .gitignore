@@ -1,0 +1,105 @@
+# macOS
+.DS_Store
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+venv_test/
+env/
+ENV/
+
+# Environment files and secrets
+.env
+.env.*
+.envrc
+*.pem
+*.key
+*.crt
+credentials*.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / Editor settings
+.vscode/
+.idea/
+
+# Build & packaging
+build/
+dist/
+.eggs/
+*.egg-info/
+wheels/
+
+# Tests & coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Type checker / linters
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Logs
+logs/
+*.log
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# ML/DS data and artifacts (project-specific)
+data/
+datasets/
+artifacts/
+outputs/
+figures/
+reports/
+checkpoints/
+runs/
+.cache/
+wandb/
+mlruns/
+
+# Keep placeholders in ignored folders
+!data/README.md
+!datasets/README.md
+!artifacts/README.md
+
+# Models and serialized artifacts
+models/
+backend/app/ml_models/
+*.h5
+*.hdf5
+*.keras
+*.pb
+*.tflite
+*.joblib
+*.pkl
+
+# TensorBoard
+events.out.tfevents.*
+
+# CSVs in backend root (training/exports)
+backend/*.csv
+
+# Flask instance folder (runtime configs, uploads)
+instance/
+
+# Node/JS (client)
+node_modules/
+client/node_modules/
+client/.next/
+client/.nuxt/
+client/dist/
+client/build/
+client/.cache/
