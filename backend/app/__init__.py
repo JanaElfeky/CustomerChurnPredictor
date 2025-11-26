@@ -42,11 +42,9 @@ def create_app(config_name=None):
 def register_blueprints(app):
     """Register Flask blueprints"""
     # Import blueprints here to avoid circular imports
-    # from app.routes.prediction import prediction_bp
-    # from app.routes.health import health_bp
+    from app.routes.prediction_routes import prediction_bp
 
-    # app.register_blueprint(health_bp, url_prefix='/api/health')
-    # app.register_blueprint(prediction_bp, url_prefix='/api/predict')
+    app.register_blueprint(prediction_bp)
     pass
 
 
