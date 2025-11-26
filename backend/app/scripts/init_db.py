@@ -2,17 +2,21 @@ import os
 import pandas as pd
 
 from app import create_app, db
-from app.models import Customer, CustomerLabel
+from app.models import Customer, CustomerLabel, Prediction
 
 
 def init_db_from_csv(csv_path: str):
     app = create_app()
     with app.app_context():
-        # Create tables
+        # Create all tables (customers, customer_labels, predictions)
+        print("Creating database tables...")
         db.create_all()
+        print("✓ Tables created: customers, customer_labels, predictions")
+        print()
 
         # Load training dataset
         df = pd.read_csv(csv_path)
+        print(f"Loading data from {csv_path}...")
 
         # Iterate rows and insert
         for _, row in df.iterrows():
@@ -61,8 +65,10 @@ def init_db_from_csv(csv_path: str):
                 db.session.add(label)
 
         db.session.commit()
-        print("Database initialized with training data.")
-
+        print(f"\n✓ Database initialized successfully!")
+        print(f"  - Customers: {Customer.query.count()}")
+        print(f"  - Labels: {CustomerLabel.query.count()}")
+        print(f"  - Predictions: {Prediction.query.count()}")
 
 if __name__ == "__main__":
     csv_path = 'churn.csv'

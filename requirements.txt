@@ -7,3 +7,9 @@ Flask-Cors
 numpy
 pandas
 scikit-learn
+tensorflow
+matplotlib
+seaborn
+imbalanced-learn
+joblib
+APScheduler
