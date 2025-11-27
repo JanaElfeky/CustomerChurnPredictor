@@ -54,9 +54,12 @@ class IntegratedRetrainingScheduler:
                     logger.warning("No labeled data found in database. Skipping retraining.")
                     return
 
-                # Generate temporary CSV path
+                # Generate CSV path for training data (saved permanently for review)
+                training_data_dir = os.path.join(os.path.dirname(MODEL_PATH), 'training_datasets')
+                os.makedirs(training_data_dir, exist_ok=True)
+
                 temp_csv = os.path.join(
-                    os.path.dirname(MODEL_PATH),
+                    training_data_dir,
                     f"training_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
                 )
 
@@ -77,9 +80,10 @@ class IntegratedRetrainingScheduler:
 
                 if export_stats['total_records'] == 0:
                     logger.warning("No new labeled data since last training. Skipping retraining.")
-                    # Clean up empty file
+                    # Clean up empty file (only delete if empty/no records)
                     if os.path.exists(temp_csv):
                         os.remove(temp_csv)
+                        logger.info("Removed empty training data file")
                     return
 
                 logger.info(f"Exported {export_stats['total_records']} records to {temp_csv}")
@@ -127,13 +131,9 @@ class IntegratedRetrainingScheduler:
             self.last_training_time = training_completion_time
             self.training_count += 1
 
-            # Clean up temporary CSV
-            if os.path.exists(temp_csv):
-                try:
-                    os.remove(temp_csv)
-                    logger.info(f"Cleaned up temporary file: {temp_csv}")
-                except Exception as cleanup_error:
-                    logger.warning(f"Failed to clean up temp file: {cleanup_error}")
+            # Keep training dataset for review (don't delete)
+            logger.info(f"Training dataset saved at: {temp_csv}")
+            logger.info(f"Review this file to see which records were used for training iteration #{self.training_count}")
 
             logger.info("=" * 70)
             logger.info("SCHEDULED RETRAINING COMPLETED SUCCESSFULLY")
