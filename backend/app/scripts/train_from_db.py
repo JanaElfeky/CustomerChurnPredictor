@@ -17,7 +17,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from app import create_app, db
 from app.models.customer import Customer
 from app.models.customer_label import CustomerLabel
-from app.services.model_interface import retrain_model, MODEL_PATH
+from app.services.model_interface import retrain_model, MODEL_PATH, SCALER_PATH, ML_MODELS_DIR
+from app.services.model_versioning import ModelVersionManager
 
 
 def fetch_labeled_customers():
@@ -167,6 +168,35 @@ def train_initial_model_from_db(save_csv=True):
             # Clean up temp file if not saving CSV
             if not save_csv and os.path.exists(temp_data_path):
                 os.remove(temp_data_path)
+
+            # Save version metadata for scheduler
+            try:
+                version_manager = ModelVersionManager(ML_MODELS_DIR, max_versions=3)
+
+                # Get data stats
+                total_records = len(df)
+                churned = int(df['TARGET'].sum())
+                not_churned = total_records - churned
+
+                training_info = {
+                    "total_samples": total_records,
+                    "churned": churned,
+                    "not_churned": not_churned,
+                    "training_mode": "initial",
+                    "is_first_training": True,
+                    "epochs": 100,
+                    "batch_size": 64
+                }
+
+                version_info = version_manager.save_new_version(
+                    model_path=results['model_path'],
+                    scaler_path=results['scaler_path'],
+                    metrics=results['final_metrics'],
+                    training_info=training_info
+                )
+                print(f"\nVersion saved: {version_info['version_id']}")
+            except Exception as e:
+                print(f"\nWarning: Could not save version metadata: {e}")
 
             print("\n" + "=" * 70)
             print("MODEL TRAINING COMPLETED SUCCESSFULLY")

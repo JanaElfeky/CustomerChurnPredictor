@@ -24,6 +24,10 @@ class Config:
     # Pagination
     ITEMS_PER_PAGE = 20
 
+    # Scheduler settings
+    ENABLE_SCHEDULER = os.environ.get('ENABLE_SCHEDULER', 'False').lower() == 'true'
+    RETRAINING_INTERVAL_HOURS = float(os.environ.get('RETRAINING_INTERVAL_HOURS', '24'))
+
 
 class DevelopmentConfig(Config):
     """Development configuration"""

@@ -158,7 +158,14 @@ def retrain_model(new_data_path, target_column='TARGET',
     if target_column not in df.columns:
         raise ValueError(f"Target column '{target_column}' not found in data")
 
-    X = df.drop(target_column, axis=1)
+    # Drop ID column if present (it shouldn't be used as a feature)
+    columns_to_drop = [target_column]
+    id_cols = [col for col in df.columns if col.lower() == 'id']
+    if id_cols:
+        columns_to_drop.extend(id_cols)
+        print(f"Dropping ID column: {id_cols}")
+
+    X = df.drop(columns_to_drop, axis=1)
     y = df[target_column]
 
     # Preprocess data using the preprocessor (per-feature scaling based on skewness)

@@ -41,3 +41,4 @@ class Customer(db.Model):
     pack_105 = db.Column(db.Boolean)
 
     labels = db.relationship("CustomerLabel", backref="customer", lazy=True)
+    predictions = db.relationship("Prediction", backref="customer", lazy=True)

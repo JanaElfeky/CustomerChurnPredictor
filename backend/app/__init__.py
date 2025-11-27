@@ -10,7 +10,8 @@ db = SQLAlchemy()
 def create_app(config_name=None):
     """Application factory pattern"""
     # Load environment variables from .env file
-    load_dotenv()
+    env_path = os.path.join(os.path.dirname(__file__), 'config', '.env')
+    load_dotenv(env_path)
 
     app = Flask(__name__)
 
@@ -36,6 +37,10 @@ def create_app(config_name=None):
     # Register error handlers
     register_error_handlers(app)
 
+    # Initialize scheduler (if enabled via config)
+    from app.services.scheduler_service import init_scheduler
+    init_scheduler(app)
+
     return app
 
 
@@ -43,9 +48,14 @@ def register_blueprints(app):
     """Register Flask blueprints"""
     # Import blueprints here to avoid circular imports
     from app.routes.prediction_routes import prediction_bp
+    from app.routes.history_routes import history_bp
+    from app.routes.feedback_routes import feedback_bp
+    from app.routes.scheduler_routes import scheduler_bp
 
     app.register_blueprint(prediction_bp)
-    pass
+    app.register_blueprint(history_bp)
+    app.register_blueprint(feedback_bp)
+    app.register_blueprint(scheduler_bp)
 
 
 def register_error_handlers(app):

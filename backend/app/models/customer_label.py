@@ -12,3 +12,4 @@ class CustomerLabel(db.Model):
         nullable=False)
     target = db.Column(db.Boolean, nullable=False)  # 0/1
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
