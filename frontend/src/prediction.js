@@ -484,12 +484,13 @@ const handleSubmit = async (e) => {
         margin="normal"
         required
         error={!!errors.PACK}
-        helperText={errors.PACK || 'Service package (102, 103, 104, 105).'}
+        helperText={errors.PACK || 'Service package.'}
       >
         <MenuItem value={102}>102</MenuItem>
         <MenuItem value={103}>103</MenuItem>
         <MenuItem value={104}>104</MenuItem>
         <MenuItem value={105}>105</MenuItem>
+        <MenuItem value={0}>Other</MenuItem>
       </TextField>
 
       <Box sx={{ mt: 2, mb: 2, display: 'flex', gap: 2 }}>

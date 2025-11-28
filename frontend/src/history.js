@@ -1,4 +1,3 @@
-// src/history.js
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -21,24 +20,24 @@ function PredictionHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-useEffect(() => {
-  const fetchHistory = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await getPredictionHistory(limit);
-      console.log('history API response', data);  // <--- important
-      // adjust this line once you see the real shape
-      setHistory(Array.isArray(data) ? data : (data.predictions || []));
-    } catch (err) {
-      setError(err.message || 'Failed to load history');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchHistory = async () => {
+      console.log('Calling getPredictionHistory with limit', limit);
+      setLoading(true);
+      setError('');
+      try {
+        const data = await getPredictionHistory(limit);
+        console.log('recent history API response', data);
+        setHistory(Array.isArray(data.predictions) ? data.predictions : []);
+      } catch (err) {
+        setError(err.message || 'Failed to load history');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchHistory();
-}, [limit]);
+    fetchHistory();
+  }, [limit]);
 
   const handleLimitChange = (e) => {
     const raw = e.target.value;
@@ -49,8 +48,6 @@ useEffect(() => {
     const num = Number(raw);
     const clamped = Math.min(50, Math.max(1, isNaN(num) ? 1 : num));
     setLimit(clamped);
-    // optional: reload immediately if you later support ?limit=
-    // loadHistory();
   };
 
   return (
@@ -68,6 +65,7 @@ useEffect(() => {
         size="small"
         sx={{ mb: 2, width: 220 }}
         helperText="Choose between 1 and 50"
+        disabled={loading}
       />
 
       {loading && <CircularProgress />}
@@ -78,30 +76,32 @@ useEffect(() => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Timestamp</TableCell>
                 <TableCell>Customer ID</TableCell>
                 <TableCell>Prediction</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-            {history.length === 0 ? (
+              {history.length === 0 ? (
                 <TableRow>
-                <TableCell colSpan={3} align="center">
-                    No predictions yet.
-                </TableCell>
+                  <TableCell colSpan={2} align="center">
+                    No recent predictions yet.
+                  </TableCell>
                 </TableRow>
-            ) : (
+              ) : (
                 history.map((item) => (
-                <TableRow key={item.id}>
+                  <TableRow key={item.id}>
                     <TableCell>{item.customer_id}</TableCell>
                     <TableCell
-                    style={{ color: item.predicted_churn ? 'red' : 'green' }}
+                      style={{ 
+                        color: item.predicted_churn ? 'red' : 'green',
+                        fontWeight: 'bold'
+                      }}
                     >
-                    {item.predicted_churn ? 'Churner' : 'Non‑churner'}
+                      {item.predicted_churn ? 'Churner' : 'Non-churner'}
                     </TableCell>
-                </TableRow>
+                  </TableRow>
                 ))
-            )}
+              )}
             </TableBody>
           </Table>
         </TableContainer>

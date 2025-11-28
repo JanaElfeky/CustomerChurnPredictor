@@ -23,21 +23,25 @@ export const predictChurn = async (features) => {
   };
 };
 
-export const getPredictionHistory = async (limit = 20) => {
-  const res = await fetch(`${API_BASE}/history/recent`, {
-    method: 'GET',
-  });
 
-  if (!res.ok) {
-    throw new Error(`Failed to load history (status ${res.status})`);
-  }
+// export const getPredictionHistory = async (limit = 20) => {
+//   const params = new URLSearchParams({ limit: limit });
+//   const response = await fetch(`/api/history/recent?${params}`);
+//   if (!response.ok) {
+//     throw new Error(`HTTP error! status: ${response.status}`);
+//   }
+//   return response.json();
+// };
 
-  const data = await res.json();  // { success, count, predictions: [...] }
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to load history');
-  }
-  return data;
-};
+export async function getPredictionHistory(limit) {
+  const url = `${API_BASE}/history/recent`;
+  console.log('Fetching history from', url);
+  const res = await fetch(url);
+  const text = await res.text();
+  console.log('Raw response text:', text.slice(0, 200)); // first 200 chars
+  return JSON.parse(text);  // TEMP: parse manually so you see the raw HTML if it’s wrong
+}
+
 export const submitFeedback = async (feedbacks) => {
   // map from form rows to API payload
   const labels = feedbacks.map((row) => ({

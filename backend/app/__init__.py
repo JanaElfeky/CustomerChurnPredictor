@@ -15,6 +15,7 @@ def create_app(config_name=None):
     env_path = os.path.join(os.path.dirname(__file__), 'config', '.env')
     load_dotenv(env_path)
 
+
     app = Flask(__name__)
 
     # Determine config
@@ -25,6 +26,8 @@ def create_app(config_name=None):
     from app.config.config import config
     app.config.from_object(config[config_name])
 
+    print("DB URI in this run:", app.config["SQLALCHEMY_DATABASE_URI"])
+
     # Validate production config
     if config_name == 'production' and not app.config.get('SECRET_KEY'):
         raise ValueError("SECRET_KEY must be set in production environment")
@@ -33,6 +36,9 @@ def create_app(config_name=None):
     db.init_app(app)
     migrate.init_app(app, db)
     CORS(app)
+
+    with app.app_context():
+        db.create_all()
 
     # Register blueprints
     register_blueprints(app)
