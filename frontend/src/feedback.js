@@ -1,3 +1,4 @@
+// src/feedback.js
 import React, { useState } from 'react';
 import {
   Box,
@@ -14,8 +15,8 @@ import { submitFeedback } from './api';
 
 function FeedbackForm() {
   const [feedbacks, setFeedbacks] = useState([{ CustomerID: '', churned: '' }]);
-  const [rowErrors, setRowErrors] = useState([]);      // per‑row errors
-  const [globalError, setGlobalError] = useState('');  // top message
+  const [rowErrors, setRowErrors] = useState([]);
+  const [globalError, setGlobalError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -67,8 +68,8 @@ function FeedbackForm() {
 
     setLoading(true);
     try {
-      await submitFeedback(feedbacks);
-      setSuccess('Feedback submitted successfully!');
+      const result = await submitFeedback(feedbacks);
+      setSuccess(result.message || 'Feedback submitted successfully!');
       setFeedbacks([{ CustomerID: '', churned: '' }]);
       setRowErrors([]);
     } catch (err) {
@@ -129,7 +130,6 @@ function FeedbackForm() {
         <Button type="submit" variant="contained" color="secondary" disabled={loading}>
           {loading ? 'Submitting...' : 'Submit Feedback'}
         </Button>
-
         <Button variant="outlined" onClick={addRow}>
           Add Another Customer
         </Button>

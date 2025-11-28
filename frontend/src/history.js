@@ -1,3 +1,4 @@
+// src/history.js
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -10,22 +11,25 @@ import {
   TableRow,
   Paper,
   CircularProgress,
-  TextField
+  TextField,
 } from '@mui/material';
 import { getPredictionHistory } from './api';
 
 function PredictionHistory() {
   const [history, setHistory] = useState([]);
-  const [limit, setLimit] = useState(20);   // default 20
+  const [limit, setLimit] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadHistory = async (limitValue) => {
+useEffect(() => {
+  const fetchHistory = async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await getPredictionHistory(limitValue);
-      setHistory(data.predictions || []);
+      const data = await getPredictionHistory(limit);
+      console.log('history API response', data);  // <--- important
+      // adjust this line once you see the real shape
+      setHistory(Array.isArray(data) ? data : (data.predictions || []));
     } catch (err) {
       setError(err.message || 'Failed to load history');
     } finally {
@@ -33,22 +37,22 @@ function PredictionHistory() {
     }
   };
 
-useEffect(() => {
-  // whenever "limit" changes, reload
-  loadHistory(limit);
-}, [limit]);  // <--- add limit here
+  fetchHistory();
+}, [limit]);
 
-const handleLimitChange = (e) => {
-  // read the number the user typed
-  const raw = e.target.value;
-  if (raw === '') {
-    setLimit('');           // allow empty while typing
-    return;
-  }
-  const num = Number(raw);
-  const clamped = Math.min(50, Math.max(1, isNaN(num) ? 1 : num));
-  setLimit(clamped);        // this triggers useEffect -> loadHistory(clamped)
-};
+  const handleLimitChange = (e) => {
+    const raw = e.target.value;
+    if (raw === '') {
+      setLimit('');
+      return;
+    }
+    const num = Number(raw);
+    const clamped = Math.min(50, Math.max(1, isNaN(num) ? 1 : num));
+    setLimit(clamped);
+    // optional: reload immediately if you later support ?limit=
+    // loadHistory();
+  };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -74,27 +78,30 @@ const handleLimitChange = (e) => {
           <Table size="small">
             <TableHead>
               <TableRow>
+                <TableCell>Timestamp</TableCell>
                 <TableCell>Customer ID</TableCell>
                 <TableCell>Prediction</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {history.length === 0 ? (
+            {history.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                <TableCell colSpan={3} align="center">
                     No predictions yet.
-                  </TableCell>
+                </TableCell>
                 </TableRow>
-              ) : (
-                history.map((item, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{item.cutomer_id}</TableCell>
-                    <TableCell style={{ color: item.label === 'Churner' ? 'red' : 'green' }}>
-                      {item.label}
+            ) : (
+                history.map((item) => (
+                <TableRow key={item.id}>
+                    <TableCell>{item.customer_id}</TableCell>
+                    <TableCell
+                    style={{ color: item.predicted_churn ? 'red' : 'green' }}
+                    >
+                    {item.predicted_churn ? 'Churner' : 'Non‑churner'}
                     </TableCell>
-                  </TableRow>
+                </TableRow>
                 ))
-              )}
+            )}
             </TableBody>
           </Table>
         </TableContainer>

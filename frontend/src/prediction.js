@@ -120,28 +120,31 @@ const [formData, setFormData] = useState(initialFormData);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setPrediction(null);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setPrediction(null);
 
-    if (!validate()) {
-      setError('Please fix the highlighted fields.');
-      return;
-    }
+  // 1) validate first
+  if (!validate()) {
+    setError('Please fix the highlighted fields.');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      const numericPayload = Object.fromEntries(
-        Object.entries(formData).map(([k, v]) => [k, v === '' ? null : Number(v)])
-      );
-      const result = await predictChurn(numericPayload);
-      setPrediction(result);
-    } catch (err) {
-      setError(err.message || 'Prediction failed');
-    } finally {
-      setLoading(false);
-    }
+  // 2) build numeric payload
+  const numericPayload = Object.fromEntries(
+    Object.entries(formData).map(([k, v]) => [k, v === '' ? null : Number(v)])
+  );
+
+  setLoading(true);
+  try {
+    const result = await predictChurn(numericPayload);
+    setPrediction(result);
+  } catch (err) {
+    setError(err.message || 'Prediction failed');
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -514,12 +517,14 @@ const [formData, setFormData] = useState(initialFormData);
 
       {prediction && (
         <Alert
-          severity={prediction.label === 'Churner' ? 'error' : 'success'}
-          sx={{ mt: 2 }}
+            severity={prediction.label === 'Churner' ? 'error' : 'success'}
+            sx={{ mt: 2 }}
         >
-          Prediction: <strong>{prediction.label}</strong>
+            Prediction for customer <strong>{prediction.customerId}</strong>:
+            {' '}
+            <strong>{prediction.label}</strong>
         </Alert>
-      )}
+        )}
     </Box>
   );
 }
