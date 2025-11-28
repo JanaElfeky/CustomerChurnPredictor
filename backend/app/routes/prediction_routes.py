@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import pandas as pd
 import logging
+from sqlalchemy import func
 from app.services.model_interface import predict, retrain_model
 from app.models import Customer, Prediction
 from app import db
@@ -32,6 +33,14 @@ def predict_single():
                 'error': 'Invalid prediction result'
             }), 500
 
+        # If customer ID not provided, auto-generate next ID
+        if 'id' not in data or data['id'] is None:
+            # Get the maximum customer ID and increment
+            max_id = db.session.query(func.max(Customer.id)).scalar()
+            next_id = (max_id or 0) + 1
+            data['id'] = next_id
+            logger.info(f"Auto-generated customer ID: {next_id}")
+
         # Create or update customer record
         customer = Customer(**data)
         db.session.add(customer)
@@ -39,7 +48,7 @@ def predict_single():
 
         # Create prediction record
         prediction_record = Prediction(
-            customer_id=customer.id,
+            id=customer.id,
             churn_probability=float(probability_value),
             predicted_churn=bool(prediction_value)
         )
@@ -55,7 +64,6 @@ def predict_single():
         return jsonify({
             'success': True,
             'customer_id': customer.id,
-            'prediction_id': prediction_record.id,
             'prediction': result
         }), 200
 

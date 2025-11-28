@@ -1,10 +1,12 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
 db = SQLAlchemy()
+migrate = Migrate()
 
 
 def create_app(config_name=None):
@@ -29,6 +31,7 @@ def create_app(config_name=None):
 
     # Initialize extensions
     db.init_app(app)
+    migrate.init_app(app, db)
     CORS(app)
 
     # Register blueprints

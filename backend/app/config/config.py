@@ -9,7 +9,26 @@ class Config:
     SQLALCHEMY_ECHO = False
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///churn_predictor.db'
+    # Support both DATABASE_URL and Supabase connection strings
+    database_url = os.environ.get('DATABASE_URL') or 'sqlite:///churn_predictor.db'
+
+    # Fix for Supabase: Replace postgres:// with postgresql:// (SQLAlchemy 1.4+ requirement)
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+    SQLALCHEMY_DATABASE_URI = database_url
+
+    # Connection pool settings for PostgreSQL/Supabase
+    if database_url.startswith('postgresql://'):
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_size': 10,
+            'pool_recycle': 3600,
+            'pool_pre_ping': True,
+            'max_overflow': 20,
+            'connect_args': {
+                'connect_timeout': 10,
+            }
+        }
 
     # CORS
     CORS_HEADERS = 'Content-Type'
