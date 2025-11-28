@@ -1,6 +1,28 @@
 {
   "versions": [
     {
+      "version_id": "20251128_131432",
+      "timestamp": "2025-11-28T13:14:32.674167",
+      "model_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251128_131432/model.keras",
+      "scaler_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251128_131432/scaler.pkl",
+      "metrics": {
+        "val_loss": 0.1552700698375702,
+        "val_accuracy": 0.6792742609977722,
+        "val_precision": 0.1422490030527115,
+        "val_recall": 0.5809950232505798,
+        "val_auc": 0.694086492061615
+      },
+      "training_info": {
+        "total_samples": 355210,
+        "churned": 28929,
+        "not_churned": 326281,
+        "training_mode": "incremental",
+        "new_samples_only": true,
+        "epochs": 100,
+        "batch_size": 64
+      }
+    },
+    {
       "version_id": "20251127_140613",
       "timestamp": "2025-11-27T14:06:13.525661",
       "model_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251127_140613/model.keras",
@@ -43,29 +65,7 @@
         "epochs": 100,
         "batch_size": 64
       }
-    },
-    {
-      "version_id": "20251127_135938",
-      "timestamp": "2025-11-27T13:59:38.741668",
-      "model_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251127_135938/model.keras",
-      "scaler_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251127_135938/scaler.pkl",
-      "metrics": {
-        "val_loss": 0.15296439826488495,
-        "val_accuracy": 0.6705143451690674,
-        "val_precision": 0.14221246540546417,
-        "val_recall": 0.6025840044021606,
-        "val_auc": 0.6977146863937378
-      },
-      "training_info": {
-        "total_samples": 355190,
-        "churned": 28925,
-        "not_churned": 326265,
-        "training_mode": "initial",
-        "is_first_training": true,
-        "epochs": 100,
-        "batch_size": 64
-      }
     }
   ],
-  "latest_version": "20251127_140613"
+  "latest_version": "20251128_131432"
 }
