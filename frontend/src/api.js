@@ -34,7 +34,7 @@ export const predictChurn = async (features) => {
 // };
 
 export async function getPredictionHistory(limit) {
-  const url = `${API_BASE}/history/recent`;
+  const url = `${API_BASE}/history/recent?limit=${limit}`;
   console.log('Fetching history from', url);
   const res = await fetch(url);
   const text = await res.text();
