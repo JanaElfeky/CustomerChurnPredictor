@@ -1,0 +1,48 @@
+{
+  "versions": [
+    {
+      "version_id": "20251129_131329",
+      "timestamp": "2025-11-29T13:13:29.353884",
+      "model_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251129_131329/model.keras",
+      "scaler_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251129_131329/scaler.pkl",
+      "metrics": {
+        "val_loss": 0.10808539390563965,
+        "val_accuracy": 0.75,
+        "val_precision": 0.0,
+        "val_recall": 0.0,
+        "val_auc": 0.0
+      },
+      "training_info": {
+        "total_samples": 20,
+        "churned": 3,
+        "not_churned": 17,
+        "training_mode": "incremental",
+        "epochs": 100,
+        "batch_size": 64
+      }
+    },
+    {
+      "version_id": "20251129_121320",
+      "timestamp": "2025-11-29T12:13:20.361011",
+      "model_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251129_121320/model.keras",
+      "scaler_path": "/Users/kareemelnaghy/Desktop/CustomerChurnPredictor/backend/app/ml_models/versions/v_20251129_121320/scaler.pkl",
+      "metrics": {
+        "val_loss": 0.1585473120212555,
+        "val_accuracy": 0.6399110555648804,
+        "val_precision": 0.1374087780714035,
+        "val_recall": 0.6454780101776123,
+        "val_auc": 0.7019630670547485
+      },
+      "training_info": {
+        "total_samples": 355190,
+        "churned": 28925,
+        "not_churned": 326265,
+        "training_mode": "initial",
+        "is_first_training": true,
+        "epochs": 100,
+        "batch_size": 64
+      }
+    }
+  ],
+  "latest_version": "20251129_131329"
+}

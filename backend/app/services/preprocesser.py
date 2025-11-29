@@ -94,8 +94,19 @@ def preprocess_with_scalers(input_df: pd.DataFrame, scaler_path: str) -> pd.Data
         if feature.upper() in ['ID', 'TARGET']:
             continue
 
+        # Try case-insensitive lookup for better error handling
         if feature not in scalers:
-            raise ValueError(f"No scaler found for feature: {feature}")
+            # Check if a lowercase version exists
+            feature_lower = feature.lower()
+            if feature_lower in scalers and feature_lower != feature:
+                raise ValueError(
+                    f"Feature name case mismatch: got '{feature}' but scaler has '{feature_lower}'. "
+                    f"Please ensure feature names are lowercase."
+                )
+            raise ValueError(
+                f"No scaler found for feature: {feature}. "
+                f"Available scalers: {list(scalers.keys())[:10]}..."
+            )
 
         # Transform using saved scaler
         scaler = scalers[feature]

@@ -131,10 +131,24 @@ const handleSubmit = async (e) => {
     return;
   }
 
-  
-  const numericPayload = Object.fromEntries(
-    Object.entries(formData).map(([k, v]) => [k, v === '' ? null : Number(v)])
-  );
+  // Build numeric payload with lowercase keys for backend
+  const numericPayload = {};
+
+  // Convert all fields to lowercase keys with numeric values
+  for (const [key, value] of Object.entries(formData)) {
+    if (key === 'PACK') {
+      // Skip PACK - it will be converted to pack_10X fields below
+      continue;
+    }
+    numericPayload[key.toLowerCase()] = value === '' ? null : Number(value);
+  }
+
+  // Convert PACK dropdown to pack_102, pack_103, pack_104, pack_105 boolean fields
+  const packValue = Number(formData.PACK);
+  numericPayload['pack_102'] = packValue === 102;
+  numericPayload['pack_103'] = packValue === 103;
+  numericPayload['pack_104'] = packValue === 104;
+  numericPayload['pack_105'] = packValue === 105;
 
   setLoading(true);
   try {
