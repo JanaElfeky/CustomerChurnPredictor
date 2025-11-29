@@ -1,11 +1,3 @@
-"""
-Script to fetch labeled customer data from database and train the initial model.
-This script:
-1. Fetches all customers with labels from the database
-2. Prepares the data in the correct format
-3. Trains the initial model using the optimized architecture
-"""
-
 import sys
 import os
 from datetime import datetime
@@ -24,9 +16,6 @@ from app.services.model_versioning import ModelVersionManager
 def fetch_labeled_customers():
     """
     Fetch all customers that have labels from the database.
-
-    Returns:
-        pd.DataFrame: DataFrame with customer features and TARGET column
     """
     print("Fetching labeled customers from database...")
 
@@ -87,23 +76,12 @@ def fetch_labeled_customers():
     # Create DataFrame
     df = pd.DataFrame(data)
 
-    # Display basic info
-    print(f"\nDataset shape: {df.shape}")
-    print(f"Features: {df.shape[1] - 1}")  # Exclude TARGET
-    print(f"\nClass distribution:")
-    print(df['TARGET'].value_counts())
-    print(f"\nChurn rate: {df['TARGET'].mean():.2%}")
-
     return df
 
 
 def save_training_data(df, output_path='training_data_from_db.csv'):
     """
-    Save the fetched data to CSV for reference.
-
-    Args:
-        df (pd.DataFrame): The data to save
-        output_path (str): Path to save CSV
+    Save the fetched data to CSV for development
     """
     df.to_csv(output_path, index=False)
     print(f"\nTraining data saved to: {output_path}")
@@ -112,18 +90,7 @@ def save_training_data(df, output_path='training_data_from_db.csv'):
 def train_initial_model_from_db(save_csv=True):
     """
     Fetch data from database and train the initial model.
-
-    Args:
-        save_csv (bool): Whether to save the fetched data as CSV
-
-    Returns:
-        dict: Training results
     """
-    print("=" * 70)
-    print("TRAINING INITIAL MODEL FROM DATABASE")
-    print("=" * 70)
-    print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print()
 
     # Create Flask app context
     app = create_app()
@@ -149,9 +116,7 @@ def train_initial_model_from_db(save_csv=True):
                 temp_data_path = temp_file.name
                 temp_file.close()
 
-            print("\n" + "-" * 70)
-            print("Starting model training...")
-            print("-" * 70 + "\n")
+            print("Starting model training")
 
             # Train the model
             results = retrain_model(
@@ -196,43 +161,16 @@ def train_initial_model_from_db(save_csv=True):
                 )
                 print(f"\nVersion saved: {version_info['version_id']}")
             except Exception as e:
-                print(f"\nWarning: Could not save version metadata: {e}")
-
-            print("\n" + "=" * 70)
-            print("MODEL TRAINING COMPLETED SUCCESSFULLY")
-            print("=" * 70)
-            print(f"Model saved to: {results['model_path']}")
-            print(f"Scaler saved to: {results['scaler_path']}")
-            print(f"Completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            print()
-            print("You can now use the model for predictions!")
+                print(f"\nCould not save version metadata: {e}")
 
             return results
 
         except Exception as e:
-            print("\n" + "=" * 70)
             print("MODEL TRAINING FAILED")
-            print("=" * 70)
             print(f"Error: {str(e)}")
             raise
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Train initial model from database')
-    parser.add_argument('--no-save-csv', action='store_true',
-                        help='Do not save the training data as CSV')
-
-    args = parser.parse_args()
-
-    # Check if model already exists
-    if os.path.exists(MODEL_PATH):
-        print(f"WARNING: Model already exists at {MODEL_PATH}")
-        response = input("Do you want to overwrite it? (yes/no): ")
-        if response.lower() != 'yes':
-            print("Training cancelled.")
-            sys.exit(0)
-
     # Train the model
-    train_initial_model_from_db(save_csv=not args.no_save_csv)
+    train_initial_model_from_db()

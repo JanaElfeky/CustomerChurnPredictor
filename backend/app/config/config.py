@@ -1,8 +1,9 @@
 import os
 
+
 class Config:
     """Base configuration"""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
 
     # SQLAlchemy configuration
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -10,9 +11,9 @@ class Config:
 
     # Database
     # Support both DATABASE_URL and Supabase connection strings
-    database_url = os.environ.get('DATABASE_URL') or 'sqlite:///churn_predictor.db'
+    database_url = os.environ.get(
+        'DATABASE_URL') or 'sqlite:///churn_predictor.db'
 
-    # Fix for Supabase: Replace postgres:// with postgresql:// (SQLAlchemy 1.4+ requirement)
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
@@ -30,22 +31,24 @@ class Config:
             }
         }
 
-    # CORS
-    CORS_HEADERS = 'Content-Type'
-
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+    UPLOAD_FOLDER = os.path.join(
+        os.path.dirname(
+            os.path.dirname(__file__)),
+        'uploads')
 
     # Model settings
-    MODEL_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models')
-
-    # Pagination
-    ITEMS_PER_PAGE = 20
+    MODEL_FOLDER = os.path.join(
+        os.path.dirname(
+            os.path.dirname(__file__)),
+        'models')
 
     # Scheduler settings
-    ENABLE_SCHEDULER = os.environ.get('ENABLE_SCHEDULER', 'False').lower() == 'true'
-    RETRAINING_INTERVAL_HOURS = float(os.environ.get('RETRAINING_INTERVAL_HOURS', '24'))
+    ENABLE_SCHEDULER = os.environ.get(
+        'ENABLE_SCHEDULER', 'False').lower() == 'true'
+    RETRAINING_INTERVAL_HOURS = float(
+        os.environ.get('RETRAINING_INTERVAL_HOURS', '24'))
 
 
 class DevelopmentConfig(Config):
@@ -60,7 +63,6 @@ class TestingConfig(Config):
     DEBUG = False
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    WTF_CSRF_ENABLED = False
 
 
 class ProductionConfig(Config):

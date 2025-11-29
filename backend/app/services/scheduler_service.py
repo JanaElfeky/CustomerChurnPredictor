@@ -1,8 +1,3 @@
-"""
-Integrated scheduler service that runs within the Flask application.
-This allows the scheduler to start automatically when the Flask app starts.
-"""
-
 import os
 import logging
 from datetime import datetime
@@ -10,17 +5,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.services.model_interface import retrain_model, MODEL_PATH, SCALER_PATH, ML_MODELS_DIR
 from app.services.data_export import export_labeled_data_to_csv, get_labeled_data_stats
 from app.services.model_versioning import ModelVersionManager
-from flask import current_app
 
 logger = logging.getLogger(__name__)
 
 
 class IntegratedRetrainingScheduler:
-    """
-    Integrated scheduler that runs within Flask application.
-    Automatically exports labeled data from database and retrains model.
-    """
-
     def __init__(self):
         self.scheduler = BackgroundScheduler()
         self.last_training_time = None
@@ -29,71 +18,56 @@ class IntegratedRetrainingScheduler:
         self.app = None
         self.version_manager = None
 
+    # Main retraining job - exports data from DB and retrains model
     def retrain_job(self):
-        """
-        Job that runs the retraining process.
-        Exports data from database and retrains model.
-        """
         if not self.app:
-            logger.error("Flask app not initialized in scheduler")
+            logger.error("Flask app not initialized")
             return
 
-        logger.info("=" * 70)
-        logger.info("SCHEDULED RETRAINING STARTED")
-        logger.info("=" * 70)
-        logger.info(f"Training count: {self.training_count + 1}")
+        logger.info(f"Starting retraining #{self.training_count + 1}")
 
         try:
-            # Use Flask app context for database operations
             with self.app.app_context():
-                # Log database stats
                 stats = get_labeled_data_stats()
                 logger.info(f"Database stats: {stats}")
 
                 if stats['total_labels'] == 0:
-                    logger.warning("No labeled data found in database. Skipping retraining.")
+                    logger.warning("No labeled data found")
                     return
 
-                # Generate CSV path for training data (saved permanently for review)
+                # Create CSV path for training data
                 training_data_dir = os.path.join(os.path.dirname(MODEL_PATH), 'training_datasets')
                 os.makedirs(training_data_dir, exist_ok=True)
-
                 temp_csv = os.path.join(
                     training_data_dir,
                     f"training_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
                 )
 
-                # Export only new labeled data since last training (incremental)
+                # Export new data since last training (or all if first training)
                 if self.last_training_time is None:
-                    logger.info("First training: exporting ALL labeled data")
-                    export_stats = export_labeled_data_to_csv(
-                        output_path=temp_csv,
-                        include_all=True
-                    )
+                    logger.info("First training: exporting all data")
+                    export_stats = export_labeled_data_to_csv(temp_csv, include_all=True)
                 else:
-                    logger.info(f"Exporting NEW data since last training: {self.last_training_time}")
+                    logger.info(f"Exporting data since: {self.last_training_time}")
                     export_stats = export_labeled_data_to_csv(
-                        output_path=temp_csv,
+                        temp_csv,
                         since=self.last_training_time,
                         include_all=False
                     )
 
                 if export_stats['total_records'] == 0:
-                    logger.warning("No new labeled data since last training. Skipping retraining.")
-                    # Clean up empty file (only delete if empty/no records)
+                    logger.warning("No new data since last training")
                     if os.path.exists(temp_csv):
                         os.remove(temp_csv)
-                        logger.info("Removed empty training data file")
                     return
 
-                logger.info(f"Exported {export_stats['total_records']} records to {temp_csv}")
+                logger.info(f"Exported {export_stats['total_records']} records")
 
-            # Retrain the model incrementally (continue from previous weights)
-            logger.info(f"Retraining model incrementally with data from: {temp_csv}")
+            # Retrain model (incremental if model exists)
             results = retrain_model(
                 new_data_path=temp_csv,
                 target_column='TARGET',
-                load_existing=os.path.exists(MODEL_PATH),  # Load previous weights if available
+                load_existing=os.path.exists(MODEL_PATH),
                 validation_split=0.2,
                 epochs=100,
                 batch_size=64,
@@ -101,7 +75,7 @@ class IntegratedRetrainingScheduler:
                 verbose=1
             )
 
-            # Save model version with metadata
+            # Save version using ModelVersionManager
             if self.version_manager:
                 try:
                     training_info = {
@@ -109,7 +83,6 @@ class IntegratedRetrainingScheduler:
                         "churned": export_stats.get('churned', 0),
                         "not_churned": export_stats.get('not_churned', 0),
                         "training_mode": "initial" if self.last_training_time is None else "incremental",
-                        "new_samples_only": self.last_training_time is not None,
                         "epochs": 100,
                         "batch_size": 64
                     }
@@ -122,57 +95,36 @@ class IntegratedRetrainingScheduler:
                     )
 
                     logger.info(f"Saved as version: {version_info['version_id']}")
-
                 except Exception as e:
-                    logger.warning(f"Failed to save model version: {str(e)}")
+                    logger.warning(f"Failed to save version: {str(e)}")
 
-            # Update tracking AFTER successful training (use UTC to match database timestamps)
-            training_completion_time = datetime.utcnow()
-            self.last_training_time = training_completion_time
+            # Update tracking after successful training
+            self.last_training_time = datetime.utcnow()
             self.training_count += 1
 
-            # Keep training dataset for review (don't delete)
-            logger.info(f"Training dataset saved at: {temp_csv}")
-            logger.info(f"Review this file to see which records were used for training iteration #{self.training_count}")
-
-            logger.info("=" * 70)
-            logger.info("SCHEDULED RETRAINING COMPLETED SUCCESSFULLY")
-            logger.info("=" * 70)
-            logger.info(f"Model saved to: {results['model_path']}")
-            logger.info(f"Scaler saved to: {results['scaler_path']}")
-            logger.info(f"Final metrics:")
+            logger.info("Retraining completed")
             for metric, value in results['final_metrics'].items():
                 logger.info(f"  {metric}: {value:.4f}")
-            logger.info(f"Total trainings completed: {self.training_count}")
-            logger.info(f"Next training will use data after: {training_completion_time}")
 
-            # Log version summary
+            # Log available versions
             if self.version_manager:
                 versions = self.version_manager.get_version_summary()
                 logger.info(f"Available versions: {len(versions)}")
                 for v in versions:
                     acc = v['accuracy'] if v['accuracy'] is not None else 0.0
                     auc = v['auc'] if v['auc'] is not None else 0.0
-                    logger.info(f"  - {v['version_id']}: acc={acc:.4f}, auc={auc:.4f}")
+                    logger.info(f"  {v['version_id']}: acc={acc:.4f}, auc={auc:.4f}")
 
         except Exception as e:
-            logger.error("=" * 70)
-            logger.error("SCHEDULED RETRAINING FAILED")
-            logger.error("=" * 70)
-            logger.error(f"Error: {str(e)}", exc_info=True)
+            logger.error(f"Retraining failed: {str(e)}", exc_info=True)
 
+    # Start background scheduler
     def start(self, interval_hours=24):
-        """
-        Start the scheduler with the Flask application.
-
-        Args:
-            interval_hours (int): Hours between retraining runs
-        """
         if self.enabled:
             logger.warning("Scheduler already running")
             return
 
-        logger.info(f"Starting integrated scheduler with {interval_hours}-hour interval")
+        logger.info(f"Starting scheduler (interval: {interval_hours}h)")
 
         self.scheduler.add_job(
             self.retrain_job,
@@ -184,17 +136,16 @@ class IntegratedRetrainingScheduler:
 
         self.scheduler.start()
         self.enabled = True
-        logger.info(f"Scheduler started. Model will retrain every {interval_hours} hours")
 
+    # Stop scheduler
     def stop(self):
-        """Stop the scheduler."""
         if self.enabled and self.scheduler.running:
             self.scheduler.shutdown()
             self.enabled = False
             logger.info("Scheduler stopped")
 
+    # Get scheduler status (for API endpoint)
     def get_status(self):
-        """Get status information about the scheduler."""
         status = {
             'enabled': self.enabled,
             'running': self.scheduler.running if self.enabled else False,
@@ -215,59 +166,47 @@ class IntegratedRetrainingScheduler:
 _scheduler = None
 
 
+# Get or create singleton scheduler
 def get_scheduler():
-    """Get or create the global scheduler instance."""
     global _scheduler
     if _scheduler is None:
         _scheduler = IntegratedRetrainingScheduler()
     return _scheduler
 
 
+# Initialize scheduler with Flask app (called from app/__init__.py)
 def init_scheduler(app):
-    """
-    Initialize the scheduler with the Flask app.
-    Call this from create_app() to start automatic retraining.
-
-    Args:
-        app: Flask application instance
-    """
-    # Check if scheduler should be enabled via config
     enable_scheduler = app.config.get('ENABLE_SCHEDULER', False)
     interval_hours = app.config.get('RETRAINING_INTERVAL_HOURS', 24)
 
     if not enable_scheduler:
-        logger.info("Automatic retraining scheduler is DISABLED (set ENABLE_SCHEDULER=True to enable)")
+        logger.info("Scheduler disabled")
         return
 
     scheduler = get_scheduler()
-    scheduler.app = app  # Set Flask app reference for database context
+    scheduler.app = app
 
-    # Initialize model version manager
+    # Setup model versioning (keeps 3 versions)
     scheduler.version_manager = ModelVersionManager(ML_MODELS_DIR, max_versions=3)
-    logger.info("Model versioning enabled (keeping 3 most recent versions)")
+    logger.info("Model versioning enabled")
 
-    # Restore last_training_time from latest model version metadata
+    # Restore state from latest version
     latest_version = scheduler.version_manager.get_latest_version()
     if latest_version:
         try:
-            from datetime import datetime
             scheduler.last_training_time = datetime.fromisoformat(latest_version['timestamp'])
             scheduler.training_count = len(scheduler.version_manager.list_versions())
-            logger.info(f"Restored last training time from metadata: {scheduler.last_training_time}")
-            logger.info(f"Training count restored: {scheduler.training_count}")
+            logger.info(f"Restored training state: {scheduler.training_count} versions")
         except Exception as e:
-            logger.warning(f"Could not restore last training time from metadata: {e}")
+            logger.warning(f"Could not restore state: {e}")
 
-    # Start scheduler when app is ready
+    # Start scheduler on first request
     @app.before_request
     def start_scheduler_once():
-        """Start scheduler on first request."""
         if not scheduler.enabled:
             with app.app_context():
                 scheduler.start(interval_hours=interval_hours)
 
-    # Register shutdown handler
+    # Stop on shutdown
     import atexit
     atexit.register(lambda: scheduler.stop())
-
-    logger.info(f"Scheduler initialized. Will start on first request with {interval_hours}h interval")

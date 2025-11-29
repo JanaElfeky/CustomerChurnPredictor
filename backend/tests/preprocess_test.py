@@ -1,5 +1,7 @@
 import pandas as pd
-from app.services import preprocess_record  # now works via __init__
+import tempfile
+import os
+from app.services.preprocesser import preprocess_and_fit
 
 record = [
     146841, 0, 0.689079823, 1, 156067.3398, 0, 1, 1, 55, 1,
@@ -19,8 +21,14 @@ columns = [
 ]
 
 df = pd.DataFrame([record], columns=columns)
-processed = preprocess_record(df)
+
+# Use preprocess_and_fit with a temporary scaler file
+with tempfile.TemporaryDirectory() as tmpdir:
+    scaler_path = os.path.join(tmpdir, "test_scaler.pkl")
+    processed, scalers = preprocess_and_fit(df, scaler_path)
+
 print("Original record:")
 print(df.head())
-print("Processed record:")
+print("\nProcessed record:")
 print(processed.head())
+print(f"\nNumber of features scaled: {len(scalers)}")

@@ -9,15 +9,6 @@ feedback_bp = Blueprint('feedback', __name__, url_prefix='/api/feedback')
 
 @feedback_bp.route('/add-label', methods=['POST'])
 def add_label():
-    """
-    Add true outcome label to unlabelled customer data.
-
-    Expected JSON body:
-    {
-        "customer_id": int,
-        "target": bool (true for churned, false for not churned)
-    }
-    """
     try:
         data = request.get_json()
         if not data:
@@ -87,18 +78,6 @@ def add_label():
 
 @feedback_bp.route('/batch-labels', methods=['POST'])
 def add_batch_labels():
-    """
-    Add multiple true outcome labels in batch.
-
-    Expected JSON body:
-    {
-        "labels": [
-            {"customer_id": int, "target": bool},
-            {"customer_id": int, "target": bool},
-            ...
-        ]
-    }
-    """
     try:
         data = request.get_json()
         if not data:
