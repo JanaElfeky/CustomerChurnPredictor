@@ -12,3 +12,4 @@ imbalanced-learn==0.14.0
 joblib==1.5.2
 APScheduler==3.11.1
 psycopg2-binary==2.9.11
+gunicorn==23.0.0
