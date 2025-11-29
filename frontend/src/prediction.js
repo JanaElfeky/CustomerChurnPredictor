@@ -125,13 +125,13 @@ const handleSubmit = async (e) => {
   setError('');
   setPrediction(null);
 
-  // 1) validate first
+ 
   if (!validate()) {
     setError('Please fix the highlighted fields.');
     return;
   }
 
-  // 2) build numeric payload
+  
   const numericPayload = Object.fromEntries(
     Object.entries(formData).map(([k, v]) => [k, v === '' ? null : Number(v)])
   );
