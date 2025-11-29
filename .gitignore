@@ -51,10 +51,16 @@ Thumbs.db
 
 # Data files
 *.csv
+# Allow production training datasets
+!backend/app/ml_models/training_datasets/*.csv
 
-# Model files
+# Model files - exclude in general
 *.pkl
 *.h5
 *.joblib
 *.pth
 *.pt
+
+# But allow production model files
+!backend/app/ml_models/model.keras
+!backend/app/ml_models/scaler.pkl
