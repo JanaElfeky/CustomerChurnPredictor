@@ -1,11 +1,16 @@
 import numpy as np
 import pandas as pd
+import os
+
+# Configure TensorFlow before importing it
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow warnings
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Force CPU usage, disable GPU
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, callbacks
 from tensorflow.keras.losses import BinaryFocalCrossentropy
 from sklearn.utils.class_weight import compute_class_weight
-import os
 from app.services.preprocesser import preprocess_and_fit, preprocess_with_scalers
 
 # Reproducibility
@@ -78,7 +83,7 @@ def predict(input_data, model_path=None, scaler_path=None, threshold=0.5):
 
 # Retrain model on new labeled data
 def retrain_model(new_data_path, target_column='TARGET', load_existing=True,
-                  validation_split=0.2, epochs=100, batch_size=64, patience=15, verbose=1):
+                  validation_split=0.0, epochs=100, batch_size=64, patience=15, verbose=1):
     if not os.path.exists(new_data_path):
         raise FileNotFoundError(f"Data not found: {new_data_path}")
 
@@ -121,14 +126,6 @@ def retrain_model(new_data_path, target_column='TARGET', load_existing=True,
     class_weight_dict = dict(zip(classes, class_weights))
     print(f"Class weights: {class_weight_dict}")
 
-    # Early stopping
-    early_stop = callbacks.EarlyStopping(
-        monitor='val_loss',
-        patience=patience,
-        restore_best_weights=True,
-        verbose=verbose
-    )
-
     # Recompile with focal loss
     loss_fn = BinaryFocalCrossentropy(gamma=2, from_logits=False, alpha=0.25)
     model.compile(
@@ -138,14 +135,13 @@ def retrain_model(new_data_path, target_column='TARGET', load_existing=True,
                  keras.metrics.Recall(name='recall'), keras.metrics.AUC(name='auc')]
     )
 
-    # Train
-    print(f"\nRetraining on {len(X_scaled)} samples")
+    # Train on entire labeled dataset (no validation split for retraining)
+    print(f"\nRetraining on {len(X_scaled)} samples (using all labeled data)")
     history = model.fit(
         X_scaled, y,
         epochs=epochs,
         batch_size=batch_size,
         validation_split=validation_split,
-        callbacks=[early_stop],
         verbose=verbose,
         class_weight=class_weight_dict
     )
@@ -155,16 +151,16 @@ def retrain_model(new_data_path, target_column='TARGET', load_existing=True,
     model.save(MODEL_PATH)
     print(f"\nModel saved to {MODEL_PATH}")
 
-    # Final metrics
+    # Final metrics (training metrics only since no validation split)
     final_metrics = {
-        'val_loss': history.history['val_loss'][-1],
-        'val_accuracy': history.history['val_accuracy'][-1],
-        'val_precision': history.history['val_precision'][-1],
-        'val_recall': history.history['val_recall'][-1],
-        'val_auc': history.history['val_auc'][-1]
+        'loss': history.history['loss'][-1],
+        'accuracy': history.history['accuracy'][-1],
+        'precision': history.history['precision'][-1],
+        'recall': history.history['recall'][-1],
+        'auc': history.history['auc'][-1]
     }
 
-    print("\nFinal metrics:")
+    print("\nFinal training metrics:")
     for metric, value in final_metrics.items():
         print(f"  {metric}: {value:.4f}")
 
