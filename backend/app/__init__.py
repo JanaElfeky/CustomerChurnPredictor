@@ -40,6 +40,9 @@ def create_app(config_name=None):
     with app.app_context():
         db.create_all()
 
+    # Register root route
+    register_root_route(app)
+
     # Register blueprints
     register_blueprints(app)
 
@@ -51,6 +54,23 @@ def create_app(config_name=None):
     init_scheduler(app)
 
     return app
+
+
+def register_root_route(app):
+    """Register root route for health check"""
+    @app.route('/')
+    def index():
+        return jsonify({
+            'success': True,
+            'message': 'Customer Churn Predictor API',
+            'version': '1.0',
+            'endpoints': {
+                'prediction': '/api/prediction/single',
+                'history': '/api/history',
+                'feedback': '/api/feedback',
+                'scheduler': '/api/scheduler'
+            }
+        }), 200
 
 
 def register_blueprints(app):
